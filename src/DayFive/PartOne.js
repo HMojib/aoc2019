@@ -110,16 +110,59 @@ function GetOperatorParameters({ parameters, opcode, ...rest }, instructions) {
   return { parameters: parameterValues, opcode, save, ...rest };
 }
 
-const availableOperations = instructions => ({
-  1: (a, b, save) => (instructions[save] = a + b),
-  2: (a, b, save) => (instructions[save] = a * b),
-  3: (a, save) => (instructions[save] = a),
-  4: a => console.log(a)
-  // 5: (a, b) => (a !== 0 ? instructions[b] = a : null)
+const availableOperations = (instructions, currentIndex) => ({
+  1: (a, b, save) => {
+    instructions[save] = a + b;
+    return currentIndex;
+  },
+  2: (a, b, save) => {
+    instructions[save] = a * b;
+    return currentIndex;
+  },
+  3: a => {
+    instructions[a] = 1;
+    return currentIndex;
+  },
+  4: a => {
+    console.log(a);
+    return currentIndex;
+  },
+  5: (a, b) => {
+    if (a !== 0) {
+      return b;
+    }
+    return currentIndex;
+  },
+  6: (a, b) => {
+    if (a === 0) {
+      return b;
+    }
+    return currentIndex;
+  },
+  7: (a, b, c) => {
+    let value = 0;
+    if (a < b) {
+      value = 1;
+    }
+    instructions[c] = value;
+    return currentIndex;
+  },
+  8: (a, b, c) => {
+    let value = 0;
+    if (a === b) {
+      value = 1;
+    }
+    instructions[c] = value;
+    return currentIndex;
+  }
 });
 
-function GetOperation(operation, instructions) {
-  const operations = availableOperations(instructions);
+function GetOperation(operation, instructions, currentIndex) {
+  const operations = availableOperations(
+    instructions,
+    instructions,
+    currentIndex
+  );
   return operations[operation];
 }
 
@@ -129,10 +172,7 @@ function run(currentIndex, instructions) {
     currentIndex
   );
   const PerformOperation = GetOperation(opcode);
-  const result = PerformOperation(...parameters);
-  if (save) {
-    instructions[save] = result;
-  }
+  PerformOperation(...parameters, save);
 
   return nextOpcode;
 }
